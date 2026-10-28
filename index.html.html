@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#17324d">
+<title>Mon Coach — Objectif 100 kg</title>
+<style>
+:root{--navy:#17324d;--teal:#246a73;--bg:#f3f6f8;--card:#fff;--text:#17212b;--muted:#64748b;--line:#dce4e9;--green:#167a55;--red:#b42318}
+*{box-sizing:border-box}body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:var(--bg);color:var(--text);padding-bottom:35px}
+header{background:linear-gradient(135deg,var(--navy),var(--teal));color:#fff;padding:24px 17px 20px;border-radius:0 0 22px 22px}
+header h1{margin:0 0 5px;font-size:25px}header p{margin:0;color:#e2edf1;font-size:14px}
+main{max-width:760px;margin:auto;padding:12px}
+.tabs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;margin:5px 0 13px}
+button,.tab{border:0;border-radius:11px;padding:12px 7px;background:#e2e9ee;color:var(--navy);font-weight:700;font-size:13px;cursor:pointer;touch-action:manipulation}
+button:active{transform:scale(.98)}.tab.active,button.primary{background:var(--teal);color:white}
+.card{background:var(--card);border-radius:15px;padding:15px;margin:11px 0;box-shadow:0 3px 12px #17324d0b}
+h2{font-size:19px;margin:0 0 10px;color:var(--navy)}h3{font-size:16px;margin:13px 0 8px;color:var(--teal)}
+.small{font-size:13px;color:var(--muted);line-height:1.45}.metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}
+.metric{background:#f2f7f8;padding:10px 8px;border-radius:11px;min-width:0}.metric strong{display:block;font-size:20px;color:var(--teal);overflow-wrap:anywhere}.metric span{font-size:11px;color:var(--muted)}
+.progress{height:8px;background:#e4ebef;border-radius:20px;overflow:hidden;margin:9px 0}.progress div{height:100%;background:var(--teal);width:0;transition:width .2s}
+label{display:block;font-size:13px;color:var(--muted);margin:9px 0}
+input[type=checkbox]{width:21px;height:21px;accent-color:var(--teal);flex-shrink:0}
+input[type=number],input[type=date],input[type=text],select{width:100%;border:1px solid var(--line);border-radius:9px;padding:11px;margin-top:5px;font-size:16px;background:white;color:var(--text);min-height:42px}
+.exercise{border:1px solid var(--line);padding:11px;border-radius:12px;margin:8px 0}.exrow{display:flex;gap:10px;align-items:flex-start}.exname{font-weight:700;font-size:14px}.exmeta{font-size:12px;color:var(--muted);margin:4px 0 8px}
+.inputs{display:flex;gap:8px;flex-wrap:wrap}.inputs label{font-size:12px;color:var(--muted);display:block;flex:1;min-width:100px;margin:4px 0}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.actions button{flex:1;min-width:125px}
+.hidden{display:none!important}.logitem{border-bottom:1px solid var(--line);padding:10px 0;display:flex;justify-content:space-between;gap:8px;align-items:center}.logitem span{font-size:13px;overflow-wrap:anywhere}
+.notice{padding:10px 12px;border-radius:10px;background:#e7f3ee;color:var(--green);font-size:13px;margin-top:10px}.error{background:#fff0ee;color:var(--red)}
+footer{text-align:center;padding:12px;color:var(--muted);font-size:12px}
+</style>
+</head>
+<body>
+<header><h1>Mon Coach 💪</h1><p>Programme sportif • Objectif 100 kg</p></header>
+<main>
+<section class="card">
+<div class="metrics">
+<div class="metric"><strong>115 kg</strong><span>Départ</span></div>
+<div class="metric"><strong id="currentWeight">—</strong><span>Dernier poids</span></div>
+<div class="metric"><strong>100 kg</strong><span>Objectif</span></div>
+</div>
+<div class="progress"><div id="weightProgress"></div></div>
+<p class="small" id="progressText">Ajoute ton poids dans « Suivi » pour commencer.</p>
+</section>
+<nav class="tabs" aria-label="Navigation">
+<button type="button" class="tab active" data-tab="training">Séances</button>
+<button type="button" class="tab" data-tab="tracking">Suivi</button>
+<button type="button" class="tab" data-tab="cardio">Cardio</button>
+<button type="button" class="tab" data-tab="guide">Conseils</button>
+</nav>
+<div id="appNotice" class="notice hidden" role="status"></div>
+
+<section id="training" class="page">
+<div class="card">
+<h2>Mes séances</h2>
+<p class="small">Sélectionne la séance, coche les exercices terminés, saisis tes charges et enregistre.</p>
+<label>Séance à afficher
+<select id="workoutSelect">
+<option value="mon">Lundi — Haut du corps A</option>
+<option value="tue">Mardi — Bas du corps A</option>
+<option value="thu">Jeudi — Haut du corps B</option>
+<option value="sat">Samedi — Bas du corps B</option>
+</select></label>
+<div id="workoutContent"></div>
+<div class="actions"><button type="button" class="primary" id="saveWorkout">Enregistrer la séance</button><button type="button" id="resetWorkout">Décocher les exercices</button></div>
+<p id="workoutStatus" class="small" aria-live="polite"></p>
+</div>
+</section>
+
+<section id="tracking" class="page hidden">
+<div class="card">
+<h2>Suivi du poids</h2><p class="small">Pèse-toi dans des conditions similaires et compare les tendances hebdomadaires.</p>
+<label>Date<input type="date" id="weightDate"></label>
+<label>Poids (kg)<input type="number" id="weightInput" min="30" max="300" step="0.1" placeholder="Ex. 114.5"></label>
+<label>Tour de taille (cm, facultatif)<input type="number" id="waistInput" min="40" max="200" step="0.5" placeholder="Ex. 108"></label>
+<div class="actions"><button type="button" class="primary" id="addWeight">Ajouter la mesure</button></div>
+</div>
+<div class="card"><h2>Historique du poids</h2><div id="weightHistory" class="small">Aucune mesure enregistrée.</div><div class="actions"><button type="button" class="primary" id="exportData">Exporter les données CSV</button><button type="button" id="clearWeights">Effacer l’historique poids</button></div><p class="small">Les données sont conservées dans le navigateur de cet appareil. Exporte-les pour en garder une copie.</p></div>
+</section>
+
+<section id="cardio" class="page hidden">
+<div class="card">
+<h2>Enregistrer le cardio</h2><p class="small">Effort modéré : tu peux encore parler en phrases complètes. Ajuste selon ta fatigue.</p>
+<label>Date<input type="date" id="cardioDate"></label>
+<label>Machine<select id="cardioMachine"><option>Tapis de marche</option><option>Vélo elliptique</option><option>Vélo d’appartement</option></select></label>
+<label>Durée (minutes)<input type="number" id="cardioDuration" min="1" max="180" value="30"></label>
+<label>Notes facultatives<input type="text" id="cardioNotes" placeholder="Ex. 5 km/h, inclinaison 2 %"></label>
+<div class="actions"><button type="button" class="primary" id="addCardio">Enregistrer le cardio</button></div>
+</div>
+<div class="card"><h2>Historique cardio</h2><div id="cardioHistory" class="small">Aucune séance enregistrée.</div><div class="actions"><button type="button" id="clearCardio">Effacer l’historique cardio</button></div></div>
+</section>
+
+<section id="guide" class="page hidden">
+<div class="card"><h2>Conseils</h2>
+<h3>Musculation</h3><p class="small">Échauffe-toi 5–8 min. Choisis une charge contrôlable en gardant environ 2–3 répétitions en réserve. Repos : 90–120 s sur les mouvements principaux, 60–90 s sur les exercices d’isolation. Lorsque tu atteins facilement le haut de la fourchette, augmente légèrement la charge.</p>
+<h3>Cardio</h3><p class="small">Vise 20–30 min selon ta récupération. Sur le tapis, commence avec une inclinaison faible ou nulle. Augmente progressivement la vitesse OU l’inclinaison, pas les deux en même temps. Pas besoin de courir.</p>
+<h3>Objectif 100 kg</h3><p class="small">La graisse ne peut pas être ciblée uniquement au ventre. La perte dépend de l’alimentation, de l’activité et de la régularité. Suis ton poids, ton tour de taille et tes performances.</p>
+<h3>Pas de petit-déjeuner ?</h3><p class="small">Tu n’es pas obligé de manger le matin. Organise tes repas autour de ton appétit et veille à couvrir tes besoins en protéines et en énergie. Si tu t’entraînes à jeun et te sens faible ou étourdi, adapte l’horaire ou prends une collation.</p>
+<h3>Sécurité</h3><p class="small">Arrête en cas de douleur vive, douleur thoracique, vertige ou essoufflement inhabituel et demande une aide adaptée. En cas de douleurs persistantes, fais adapter les exercices par un professionnel.</p>
+</div>
+</section>
+</main>
+<footer>Mon Coach • Objectif 100 kg</footer>
+<script>
+(function(){
+"use strict";
+const $=id=>document.getElementById(id);
+const today=()=>{const d=new Date();return new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,10)};
+const safeLoad=(key,fallback)=>{try{const v=localStorage.getItem(key);return v?JSON.parse(v):fallback}catch(e){return fallback}};
+const safeSave=(key,value)=>{try{localStorage.setItem(key,JSON.stringify(value));return true}catch(e){showNotice("Le navigateur ne permet pas de sauvegarder les données. Essaie d’ouvrir le fichier dans Safari ou exporte tes données.",true);return false}};
+function showNotice(message,isError){const n=$("appNotice");n.textContent=message;n.classList.remove("hidden","error");if(isError)n.classList.add("error");}
+const workouts={
+mon:{title:"Lundi — Haut du corps A",items:[["Chest press / développé poitrine","3 séries","8–12 reps"],["Tirage vertical à la poulie","3 séries","8–12 reps"],["Rowing assis à la poulie","3 séries","10–12 reps"],["Développé épaules à la machine","2 séries","10–12 reps"],["Élévations latérales","2 séries","12–15 reps"],["Curl biceps haltères ou poulie","2 séries","10–15 reps"],["Extension triceps à la poulie","2 séries","10–15 reps"]]},
+tue:{title:"Mardi — Bas du corps A",items:[["Presse à cuisses","3 séries","10–12 reps"],["Leg curl assis","3 séries","10–15 reps"],["Leg extension","2 séries","10–15 reps"],["Hip thrust à la machine","2–3 séries","10–12 reps"],["Dead bug","2 séries","8–10 / côté"]]},
+thu:{title:"Jeudi — Haut du corps B",items:[["Développé incliné à la machine","3 séries","8–12 reps"],["Tirage vertical prise neutre","3 séries","10–12 reps"],["Rowing avec poitrine appuyée","3 séries","10–12 reps"],["Pec deck","2 séries","12–15 reps"],["Oiseau à la machine","2–3 séries","12–15 reps"],["Curl biceps à la poulie","2 séries","10–15 reps"],["Extension triceps à la corde","2 séries","10–15 reps"]]},
+sat:{title:"Samedi — Bas du corps B",items:[["Presse à cuisses, amplitude confortable","3 séries","10–12 reps"],["Leg curl assis","3 séries","10–15 reps"],["Hip thrust à la machine","2 séries","10–15 reps"],["Abduction des hanches","2 séries","12–15 reps"],["Mollets à la machine","2 séries","12–15 reps"],["Pallof press à la poulie","2 séries","10–12 / côté"]]}
+};
+function getChecks(key){return safeLoad("coach_checks_"+key,{});}
+function renderWorkout(){
+ const key=$("workoutSelect").value,w=workouts[key],checks=getChecks(key);
+ $("workoutContent").innerHTML="";
+ const title=document.createElement("h3");title.textContent=w.title;$("workoutContent").appendChild(title);
+ w.items.forEach((it,i)=>{
+  const box=document.createElement("div");box.className="exercise";
+  const row=document.createElement("div");row.className="exrow";
+  const check=document.createElement("input");check.type="checkbox";check.checked=!!(checks[i]&&checks[i].done);check.dataset.check=String(i);check.setAttribute("aria-label","Exercice terminé : "+it[0]);
+  const content=document.createElement("div");content.style.flex="1";
+  const name=document.createElement("div");name.className="exname";name.textContent=it[0];
+  const meta=document.createElement("div");meta.className="exmeta";meta.textContent=it[1]+" · "+it[2];
+  const inputs=document.createElement("div");inputs.className="inputs";
+  const weightLabel=document.createElement("label");weightLabel.textContent="Charge (kg)";
+  const weight=document.createElement("input");weight.type="number";weight.min="0";weight.step="0.5";weight.placeholder="Facultatif";weight.dataset.weight=String(i);weight.value=checks[i]?.weight||"";
+  weightLabel.appendChild(weight);
+  const repsLabel=document.createElement("label");repsLabel.textContent="Répétitions réalisées";
+  const reps=document.createElement("input");reps.type="text";reps.placeholder="Ex. 12 / 11 / 10";reps.dataset.reps=String(i);reps.value=checks[i]?.reps||"";
+  repsLabel.appendChild(reps);inputs.append(weightLabel,repsLabel);content.append(name,meta,inputs);row.append(check,content);box.appendChild(row);$("workoutContent").appendChild(box);
+ });
+ $("workoutStatus").textContent="";
+}
+function saveWorkout(){
+ const key=$("workoutSelect").value,obj={};
+ $("workoutContent").querySelectorAll("[data-check]").forEach(el=>{const i=el.dataset.check;obj[i]={done:el.checked,weight:$("workoutContent").querySelector('[data-weight="'+i+'"]').value,reps:$("workoutContent").querySelector('[data-reps="'+i+'"]').value}});
+ safeSave("coach_checks_"+key,obj);$("workoutStatus").textContent="Séance enregistrée.";showNotice("Séance enregistrée sur cet appareil.");
+}
+function renderWeights(){
+ const arr=safeLoad("coach_weights",[]).slice().sort((a,b)=>b.date.localeCompare(a.date));
+ if(!arr.length){$("weightHistory").textContent="Aucune mesure enregistrée.";$("currentWeight").textContent="—";$("weightProgress").style.width="0%";$("progressText").textContent="Ajoute ton poids dans « Suivi » pour commencer.";return}
+ const latest=arr[0];$("currentWeight").textContent=latest.weight+" kg";
+ const pct=Math.max(0,Math.min(100,(115-latest.weight)/15*100));$("weightProgress").style.width=pct+"%";
+ $("progressText").textContent=latest.weight<=100?"Objectif de 100 kg atteint — bravo !":(115-latest.weight).toFixed(1)+" kg perdus depuis 115 kg · "+(latest.weight-100).toFixed(1)+" kg restants.";
+ const hist=$("weightHistory");hist.innerHTML="";
+ arr.forEach((x,index)=>{const row=document.createElement("div");row.className="logitem";const span=document.createElement("span");span.textContent=x.date+" · "+x.weight+" kg"+(x.waist?" · taille "+x.waist+" cm":"");const del=document.createElement("button");del.type="button";del.textContent="Supprimer";del.style.padding="7px";del.addEventListener("click",()=>{const a=safeLoad("coach_weights",[]);a.splice(a.findIndex(y=>y.id===x.id),1);safeSave("coach_weights",a);renderWeights()});row.append(span,del);hist.appendChild(row)});
+}
+function renderCardio(){
+ const arr=safeLoad("coach_cardio",[]).slice().reverse(),hist=$("cardioHistory");hist.innerHTML="";
+ if(!arr.length){hist.textContent="Aucune séance enregistrée.";return}
+ arr.forEach(x=>{const row=document.createElement("div");row.className="logitem";const span=document.createElement("span");span.textContent=x.date+" · "+x.machine+" · "+x.duration+" min"+(x.notes?" — "+x.notes:"");row.appendChild(span);hist.appendChild(row)});
+}
+function downloadCSV(){
+ const rows=[["type","date","poids_kg","tour_taille_cm","machine","duree_min","notes"]];
+ safeLoad("coach_weights",[]).forEach(x=>rows.push(["poids",x.date,x.weight,x.waist||"","","",""]));
+ safeLoad("coach_cardio",[]).forEach(x=>rows.push(["cardio",x.date,"","",x.machine,x.duration,x.notes||""]));
+ const csv=rows.map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(";")).join("\r\n");
+ const blob=new Blob(["\ufeff"+csv],{type:"text/csv;charset=utf-8"}),url=URL.createObjectURL(blob),a=document.createElement("a");
+ a.href=url;a.download="mon-suivi-sportif.csv";document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
+}
+function bind(){
+ document.querySelectorAll(".tab").forEach(btn=>btn.addEventListener("click",()=>{
+  document.querySelectorAll(".tab").forEach(b=>b.classList.toggle("active",b===btn));
+  document.querySelectorAll(".page").forEach(p=>p.classList.toggle("hidden",p.id!==btn.dataset.tab));
+  $("appNotice").classList.add("hidden");
+ }));
+ $("workoutSelect").addEventListener("change",renderWorkout);
+ $("saveWorkout").addEventListener("click",saveWorkout);
+ $("resetWorkout").addEventListener("click",()=>{document.querySelectorAll("#workoutContent [data-check]").forEach(e=>e.checked=false);$("workoutStatus").textContent="Exercices décochés. Appuie sur « Enregistrer » pour sauvegarder.";});
+ $("addWeight").addEventListener("click",()=>{
+  const weight=Number($("weightInput").value),waist=$("waistInput").value;
+  if(!weight||weight<30||weight>300){showNotice("Entre un poids valide entre 30 et 300 kg.",true);return}
+  if(waist&&(Number(waist)<40||Number(waist)>200)){showNotice("Entre un tour de taille valide.",true);return}
+  const arr=safeLoad("coach_weights",[]);arr.push({id:Date.now()+"-"+Math.random().toString(16).slice(2),date:$("weightDate").value||today(),weight:Math.round(weight*10)/10,waist:waist?Number(waist):""});
+  if(safeSave("coach_weights",arr)){ $("weightInput").value="";$("waistInput").value="";renderWeights();showNotice("Mesure de poids enregistrée.");}
+ });
+ $("addCardio").addEventListener("click",()=>{
+  const duration=Number($("cardioDuration").value);
+  if(!duration||duration<1||duration>180){showNotice("Entre une durée comprise entre 1 et 180 minutes.",true);return}
+  const arr=safeLoad("coach_cardio",[]);arr.push({date:$("cardioDate").value||today(),machine:$("cardioMachine").value,duration,notes:$("cardioNotes").value.trim()});
+  if(safeSave("coach_cardio",arr)){ $("cardioNotes").value="";renderCardio();showNotice("Séance cardio enregistrée.");}
+ });
+ $("exportData").addEventListener("click",downloadCSV);
+ $("clearWeights").addEventListener("click",()=>{if(confirm("Effacer tout l’historique du poids ?")){safeSave("coach_weights",[]);renderWeights();showNotice("Historique poids effacé.");}});
+ $("clearCardio").addEventListener("click",()=>{if(confirm("Effacer tout l’historique cardio ?")){safeSave("coach_cardio",[]);renderCardio();showNotice("Historique cardio effacé.");}});
+}
+function init(){
+ $("weightDate").value=today();$("cardioDate").value=today();
+ bind();renderWorkout();renderWeights();renderCardio();
+}
+if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",init);else init();
+})();
+</script>
+</body>
+</html>
